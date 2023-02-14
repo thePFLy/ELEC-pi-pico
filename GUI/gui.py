@@ -12,7 +12,7 @@ class App(customtkinter.CTk):
 
         # window
         self.title("Elec - project")
-        self.geometry(f"{600}x{350}")
+        self.geometry(f"{600}x{390}")
 
         # configure grid
         self.grid_columnconfigure((0, 1, 2), weight=1)
