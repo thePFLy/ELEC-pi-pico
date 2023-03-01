@@ -1,4 +1,4 @@
-import machine, time, _thread
+import machine, time, _thread, UART
 from machine import Pin
 
 # ultrasonic sensor ---------------------------------------------------------------------
@@ -107,8 +107,23 @@ def display_thread(distance_cm):
 
 
 # MAIN
+uart = UART(1, baudrate=9600, tx=Pin(4), rx=Pin(5))
 _thread.start_new_thread(display_thread,distance_cm)
 while True:
+    # read usb
+    if uart.any(): 
+        data = uart.read() 
+        if data == b'get':
+            uart.write(distance_target)
+        elif data == b'd':
+            uart.write(distance_cm)
+        else:
+            try:
+                distance_target = int(data)
+                uart.write("value changed...")
+            except:
+                pass
+
     # send pulse
     sensor_trig.value(0)
     time.sleep_us(5)
