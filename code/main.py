@@ -1,5 +1,7 @@
-import machine, time, _thread, UART
+import machine, time, _thread
 from machine import Pin
+
+UART = machine.UART(0, baudrate=9600)
 
 # ultrasonic sensor ---------------------------------------------------------------------
 # pin 40, VBUS -> [output] SR04 vcc
@@ -114,13 +116,13 @@ while True:
     if uart.any(): 
         data = uart.read() 
         if data == b'get':
-            uart.write(distance_target)
+            uart.write(bin(distance_target))
         elif data == b'd':
-            uart.write(distance_cm)
+            uart.write(bin(distance_cm))
         else:
             try:
                 distance_target = int(data)
-                uart.write("value changed...")
+                uart.write(bin("value changed..."))
             except:
                 pass
 
