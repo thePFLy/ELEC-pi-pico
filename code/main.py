@@ -1,8 +1,6 @@
 import machine, time, _thread
 from machine import Pin
 
-UART = machine.UART(0, baudrate=9600)
-
 # ultrasonic sensor ---------------------------------------------------------------------
 # pin 40, VBUS -> [output] SR04 vcc
 # pin 32, GP27 -> [PWM output] SR04 trig, at least 10µs psaced by at least 60µs
@@ -30,20 +28,21 @@ UART = machine.UART(0, baudrate=9600)
 # CODE ----------------------------------------------------------------------------------
 
 #pins setup
-sensor_trig = Pin(32, mode=Pin.OUT)
-sensor_echo = Pin(31, mode=Pin.IN)
+sensor_trig = Pin(27, mode=Pin.OUT)
+sensor_echo = Pin(26, mode=Pin.IN)
 
-data_0 = Pin(24, mode=Pin.OUT)
-data_1 = Pin(27, mode=Pin.OUT)
-data_2 = Pin(28, mode=Pin.OUT)
-data_3 = Pin(25, mode=Pin.OUT)
-data_dot = Pin(29, mode=Pin.OUT)
+data_0 = Pin(18, mode=Pin.OUT)
+data_1 = Pin(21, mode=Pin.OUT)
+data_2 = Pin(20, mode=Pin.OUT)
+data_3 = Pin(19, mode=Pin.OUT)
+data_dot = Pin(22, mode=Pin.OUT)
 
-seg_1 = Pin(22, mode=Pin.OUT)
-seg_2 = Pin(21, mode=Pin.OUT)
+seg_1 = Pin(17, mode=Pin.OUT)
+seg_2 = Pin(16, mode=Pin.OUT)
 
-led_green = Pin(19, mode=Pin.OUT)
-led_red = Pin(20, mode=Pin.OUT)
+led_green = Pin(14, mode=Pin.OUT)
+led_red = Pin(15, mode=Pin.OUT)
+time.sleep_us(100)
 
 #global variables
 sensor_timeout = 30000
@@ -101,16 +100,17 @@ def display_thread(distance_cm):
         led_red.value(0)
         seg_1.value(0)
         seg_2.value(1)
-        tmp = itob(int(d[1]))
-        data_3.value(tmp[3])
-        data_2.value(tmp[2])
-        data_1.value(tmp[1])
-        data_0.value(tmp[0])
+        if (len(d) > 1):
+            tmp = itob(int(d[1]))
+            data_3.value(tmp[3])
+            data_2.value(tmp[2])
+            data_1.value(tmp[1])
+            data_0.value(tmp[0])
 
 
 # MAIN
-uart = UART(1, baudrate=9600, tx=Pin(4), rx=Pin(5))
-_thread.start_new_thread(display_thread,distance_cm)
+uart = machine.UART(1, baudrate=9600, tx=Pin(4), rx=Pin(5))
+_thread.start_new_thread(display_thread, (distance_cm, ))
 while True:
     # read usb
     if uart.any(): 
@@ -135,11 +135,14 @@ while True:
 
     #await response
     try:
-        pulse_len = machine.time_pulse_us(sensor_echo, 1, sensor_timeout)
+        pulse_len = (machine.time_pulse_us(sensor_echo, 1, sensor_timeout))
         distance_cm = (pulse_len / 2) / 29.1
+        print(distance_cm)
+        time.sleep_us(100000)
 
     except:
         #allow timeout to happen whitout breaking everything (could be more precise tho)
 
         #display 0 if the sensor is too far from any objects
         distance_cm = 0
+        
