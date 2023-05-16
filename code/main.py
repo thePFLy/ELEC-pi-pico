@@ -64,25 +64,33 @@ led_red.value(0)
 def itob(n):
     if n == 0:
         return "00000000"
-    tmp = str(int(n))+"0"
+    numbers = str(int(n))+"0"
     out = [0,0,0,0,0,0,0,0]
-    print(tmp)
-    if int(tmp[0]) > 8:
+    
+    tmp = int(numbers[0])
+    if tmp >= 8:
         out[0] = 1
-    if int(tmp[0]) > 4:
+        tmp -= 8
+    if tmp >= 4:
         out[1] = 1
-    if int(tmp[0]) > 2:
+        tmp -= 4
+    if tmp >= 2:
         out[2] = 1
-    if int(tmp[0]) > 1:
+        tmp -= 2
+    if tmp >= 1:
         out[3] = 1
         
-    if int(tmp[1]) > 8:
+    tmp = int(numbers[1])
+    if tmp >= 8:
         out[4] = 1
-    if int(tmp[1]) > 4:
+        tmp -= 8
+    if tmp >= 4:
         out[5] = 1
-    if int(tmp[1]) > 2:
+        tmp -= 4
+    if tmp >= 2:
         out[6] = 1
-    if int(tmp[1]) > 1:
+        tmp -= 2
+    if tmp >= 1:
         out[7] = 1
         
     return out
@@ -92,19 +100,13 @@ uart = machine.UART(1, baudrate=9600, tx=Pin(4), rx=Pin(5))
 #_thread.start_new_thread(display_thread, (distance_cm, ))
 while True:
     # read usb
-    if uart.any(): 
-        data = uart.read() 
-        if data == b'get':
-            uart.write(bin(distance_target))
-        elif data == b'd':
-            uart.write(bin(distance_cm))
-        else:
-            try:
-                distance_target = int(data)
-                uart.write(bin("value changed..."))
-            except:
-                pass
-
+    if uart.any():
+        received_data = uart.readline().decode().strip()
+        if received_data == "exit":
+            break
+        print("Received data:", received_data)
+        uart.write("ACK: " + received_data + "\n")
+        
     # send pulse
     sensor_trig.value(0)
     time.sleep_us(5)
@@ -134,7 +136,8 @@ while True:
         
     #display 7-seg
     tmp = itob(distance_cm)
-    print(tmp)
+    print(distance_cm, tmp)
+    #print(tmp)
     seg_2.value(0)
     seg_1.value(1)
     data_0.value(tmp[4])
@@ -144,8 +147,8 @@ while True:
     time.sleep_us(20000)
     seg_1.value(0)
     seg_2.value(1)
-    data_0.value(tmp[1])
-    data_1.value(tmp[2])
-    data_2.value(tmp[3])
-    data_3.value(tmp[4])
+    data_0.value(tmp[0])
+    data_1.value(tmp[1])
+    data_2.value(tmp[2])
+    data_3.value(tmp[3])
         
