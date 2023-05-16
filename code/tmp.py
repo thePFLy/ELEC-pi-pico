@@ -41,7 +41,7 @@ if __name__ == "__main__":
 try:
     ser = serial.Serial('/dev/ttyACM0', 9600)
     main()
-except Exception as e:
-    print("error: cant connect to device",e)
+except:
+    print("error: cant connect to device")
 
 

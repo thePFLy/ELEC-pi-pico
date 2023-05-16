@@ -98,8 +98,8 @@ def itob(n):
     return out
 
 # MAIN
-uart = UART(1, baudrate=9600, tx=Pin(4), rx=Pin(5))
-uart.init(bits=8, parity=None, stop=2)
+uart = machine.UART(0, baudrate=9600, bits=8, parity=None, stop=1, tx=machine.Pin(0), rx=machine.Pin(1))
+uart.init(baudrate=9600, bits=8, parity=None, stop=1, tx=machine.Pin(0), rx=machine.Pin(1))
 #_thread.start_new_thread(display_thread, (distance_cm, ))
 tick = 0
 
@@ -107,8 +107,10 @@ while True:
     # read usb
     if uart.any():
         received_data = uart.read()
-        distance_target = int(received_data)
-        print("error")
+        try:
+            distance_target = int(received_data)
+        except:
+            pass
         continue
         
     # send pulse
@@ -123,7 +125,7 @@ while True:
         try:
             pulse_len = (machine.time_pulse_us(sensor_echo, 1, sensor_timeout))
             distance_cm = (pulse_len / 2) / 29.1
-            print(distance_target)
+            print(distance_cm)
 
         except:
             #allow timeout to happen whitout breaking everything (could be more precise tho)
