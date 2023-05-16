@@ -35,7 +35,7 @@ data_0 = Pin(18, mode=Pin.OUT)
 data_1 = Pin(21, mode=Pin.OUT)
 data_2 = Pin(20, mode=Pin.OUT)
 data_3 = Pin(19, mode=Pin.OUT)
-data_dot = Pin(22, mode=Pin.OUT)
+data_dot = Pin(17, mode=Pin.OUT)
 
 seg_1 = Pin(15, mode=Pin.OUT)
 seg_2 = Pin(16, mode=Pin.OUT)
@@ -92,20 +92,24 @@ def itob(n):
         tmp -= 2
     if tmp >= 1:
         out[7] = 1
-        
+    
+    if n < 10:
+        out = [0,0,0,0] + out[:4]
     return out
 
 # MAIN
-uart = machine.UART(1, baudrate=9600, tx=Pin(4), rx=Pin(5))
+uart = UART(1, baudrate=9600, tx=Pin(4), rx=Pin(5))
+uart.init(bits=8, parity=None, stop=2)
 #_thread.start_new_thread(display_thread, (distance_cm, ))
+tick = 0
+
 while True:
     # read usb
     if uart.any():
-        received_data = uart.readline().decode().strip()
-        if received_data == "exit":
-            break
-        print("Received data:", received_data)
-        uart.write("ACK: " + received_data + "\n")
+        received_data = uart.read()
+        distance_target = int(received_data)
+        print("error")
+        continue
         
     # send pulse
     sensor_trig.value(0)
@@ -115,16 +119,20 @@ while True:
     sensor_trig.value(0)
 
     #await response
-    try:
-        pulse_len = (machine.time_pulse_us(sensor_echo, 1, sensor_timeout))
-        distance_cm = (pulse_len / 2) / 29.1
-        time.sleep_us(15000)
+    if tick == 0:
+        try:
+            pulse_len = (machine.time_pulse_us(sensor_echo, 1, sensor_timeout))
+            distance_cm = (pulse_len / 2) / 29.1
+            print(distance_target)
 
-    except:
-        #allow timeout to happen whitout breaking everything (could be more precise tho)
+        except:
+            #allow timeout to happen whitout breaking everything (could be more precise tho)
 
-        #display 0 if the sensor is too far from any objects
-        distance_cm = 0
+            #display 0 if the sensor is too far from any objects
+            distance_cm = 0
+    tick += 1
+    if tick > 20:
+        tick = 0
         
     #display led
     if distance_cm > distance_target:
@@ -133,22 +141,29 @@ while True:
     else:
         led_green.value(1)
         led_red.value(0)
-        
+    
+    if distance_cm > 100:
+        data_dot.value(1)
+    else:
+        data_dot.value(0)
     #display 7-seg
     tmp = itob(distance_cm)
-    print(distance_cm, tmp)
-    #print(tmp)
-    seg_2.value(0)
-    seg_1.value(1)
-    data_0.value(tmp[4])
-    data_1.value(tmp[5])
-    data_2.value(tmp[6])
-    data_3.value(tmp[7])
-    time.sleep_us(20000)
     seg_1.value(0)
+    time.sleep_us(10)
+    data_0.value(tmp[3])
+    data_1.value(tmp[2])
+    data_2.value(tmp[1])
+    data_3.value(tmp[0])
+    time.sleep_us(10)
     seg_2.value(1)
-    data_0.value(tmp[0])
-    data_1.value(tmp[1])
-    data_2.value(tmp[2])
-    data_3.value(tmp[3])
+    time.sleep_us(8500)
+    seg_2.value(0)
+    time.sleep_us(10)
+    data_0.value(tmp[7])
+    data_1.value(tmp[6])
+    data_2.value(tmp[5])
+    data_3.value(tmp[4])
+    time.sleep_us(10)
+    seg_1.value(1)
+    time.sleep_us(8500)
         

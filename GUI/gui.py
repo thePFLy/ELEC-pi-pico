@@ -1,6 +1,10 @@
 import tkinter
 import tkinter.messagebox
 import customtkinter
+import serial
+
+# Adjust the port and baudrate according to your configuration
+ser = serial.Serial('/dev/ttyACM0', 9600)
 
 customtkinter.set_appearance_mode("System")
 customtkinter.set_default_color_theme("blue")
@@ -94,7 +98,13 @@ class App(customtkinter.CTk):
             print("no valid arg entered")
             pass
 
+def main():
+    while True:
+        response = ser.readline().decode().strip()
+        app.distance_displayer = response
+        print(response)
 
 if __name__ == "__main__":
     app = App()
     app.mainloop()
+    main()
