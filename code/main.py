@@ -61,16 +61,6 @@ seg_2.value(0)
 led_green.value(1)
 led_red.value(0)
 
-def read_usb_data():
-    usb_data = ""
-    while True:
-        line = sys.stdin.readline()
-        if not line:
-            break
-        usb_data += line.strip()
-    
-    return usb_data
-
 def itob(n):
     if n == 0:
         return "00000000"
