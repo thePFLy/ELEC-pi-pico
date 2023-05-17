@@ -1,4 +1,4 @@
-import machine, time, _thread
+import machine, time, _thread, select, sys
 from machine import Pin
 
 # ultrasonic sensor ---------------------------------------------------------------------
@@ -61,6 +61,16 @@ seg_2.value(0)
 led_green.value(1)
 led_red.value(0)
 
+def read_usb_data():
+    usb_data = ""
+    while True:
+        line = sys.stdin.readline()
+        if not line:
+            break
+        usb_data += line.strip()
+    
+    return usb_data
+
 def itob(n):
     if n == 0:
         return "00000000"
@@ -98,21 +108,13 @@ def itob(n):
     return out
 
 # MAIN
-uart = machine.UART(0, baudrate=9600, bits=8, parity=None, stop=1, tx=machine.Pin(0), rx=machine.Pin(1))
-uart.init(baudrate=9600, bits=8, parity=None, stop=1, tx=machine.Pin(0), rx=machine.Pin(1))
 #_thread.start_new_thread(display_thread, (distance_cm, ))
 tick = 0
+blick = 0
+
+last = []
 
 while True:
-    # read usb
-    if uart.any():
-        received_data = uart.read()
-        try:
-            distance_target = int(received_data)
-        except:
-            pass
-        continue
-        
     # send pulse
     sensor_trig.value(0)
     time.sleep_us(5)
@@ -139,10 +141,16 @@ while True:
     #display led
     if distance_cm > distance_target:
         led_green.value(0)
-        led_red.value(1)
+        if blick < 10:
+            led_red.value(1)
+        else:
+            led_red.value(0)
     else:
         led_green.value(1)
         led_red.value(0)
+    blick += 1
+    if blick > 20:
+        blick = 0
     
     if distance_cm > 100:
         data_dot.value(1)
@@ -150,6 +158,9 @@ while True:
         data_dot.value(0)
     #display 7-seg
     tmp = itob(distance_cm)
+    if tmp == [0,0,0,0,0,0,0,0]:
+        tmp = last
+    last = tmp
     seg_1.value(0)
     time.sleep_us(10)
     data_0.value(tmp[3])
