@@ -112,9 +112,17 @@ def itob(n):
 tick = 0
 blick = 0
 
-last = []
+last = [0,0,0,0,0,0,0,0]
 
 while True:
+    # try:
+    #     obj = select.poll()
+    #     obj.register(sys.stdin, 1)
+    #     if obj.poll(0):
+    #         distance_target = int(sys.stdin.buffer.readline())
+    # except:
+    #     pass
+
     # send pulse
     sensor_trig.value(0)
     time.sleep_us(5)
